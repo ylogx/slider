@@ -6,6 +6,8 @@
 #include <QtDBus/QDBusMessage>
 #include <QtDBus/QDBusConnection>
 
+//#include "amarok.h"
+
 
 namespace Ui {
 class MainWindow;
@@ -18,14 +20,34 @@ class MainWindow : public QMainWindow, QDBusMessage
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    void checkAvailablePlayer();
     
-private:
+protected:
     Ui::MainWindow *ui;
+    void connectAmarok();
+    void connectClementine();
+    void connectAudacious();
+
 public slots:
-    void pauseMedia();
-    void nextMedia();
-    void prevMedia();
-    void muteMedia();
+    void reconnect();
+
+    void pauseAmarok();
+    void nextAmarok();
+    void prevAmarok();
+    void muteAmarok();
+    void showAmarok();
+
+    void pauseAudacious();
+    void nextAudacious();
+    void prevAudacious();
+    void muteAudacious(bool);
+    void showAudacious();
+
+    void pauseClementine();
+    void nextClementine();
+    void prevClementine();
+    void muteClementine();
+    void showClementine();
 };
 
 #endif // MAINWINDOW_H
