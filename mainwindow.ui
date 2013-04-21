@@ -38,6 +38,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="pushButtonShow">
+       <property name="text">
+        <string>&amp;Show Player</string>
+       </property>
+       <property name="default">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QDial" name="dial">
        <property name="invertedAppearance">
         <bool>false</bool>
@@ -45,12 +55,15 @@
        <property name="invertedControls">
         <bool>false</bool>
        </property>
+       <property name="notchesVisible">
+        <bool>false</bool>
+       </property>
       </widget>
      </item>
      <item alignment="Qt::AlignHCenter">
       <widget class="QCheckBox" name="checkBoxMute">
        <property name="text">
-        <string>Mute</string>
+        <string>&amp;Mute</string>
        </property>
       </widget>
      </item>
@@ -59,21 +72,21 @@
        <item>
         <widget class="QPushButton" name="pushButtonPrev">
          <property name="text">
-          <string>Previous</string>
+          <string>&amp;Previous</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="pushButtonPlay">
          <property name="text">
-          <string>Play/Pause</string>
+          <string>Play/Pa&amp;use</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="pushButtonNext">
          <property name="text">
-          <string>Next</string>
+          <string>&amp;Next</string>
          </property>
         </widget>
        </item>
