@@ -11,9 +11,13 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    amarokInterface.cpp \
+    amarokAdaptor.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    amarokInterface.h \
+    amarokAdaptor.h
 
 FORMS    += mainwindow.ui
 

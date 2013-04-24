@@ -14,6 +14,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->checkBoxMute->setChecked(false);    // XXX
     //ui->dial->scroll(1,1);
     checkAvailablePlayer();
+    connect(ui->comboBox, SIGNAL(activated(int)),// SIGNAL(currentIndexChanged(int)),
+            this, SLOT(reconnect()));
     connect(ui->comboBox, SIGNAL(currentIndexChanged(int)),
             this, SLOT(reconnect()));
 }//end constructor

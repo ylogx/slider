@@ -15,7 +15,6 @@ QT4_WRAP_UI(demo_FORMS_HEADERS ${demo_FORMS})
 
 INCLUDE(${QT_USE_FILE})
 ADD_DEFINITIONS(${QT_DEFINITIONS})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 #add_executable (demo main.cpp mainwindow.h mainwindow.cpp mainwindow.ui)
 ADD_EXECUTABLE(demo ${demo_SOURCES} 
