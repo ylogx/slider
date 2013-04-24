@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->labelPlayer->setText("No Player Found :(");
+    ui->labelPlayer->setText("No Player Selected :( Use combo box");
     ui->checkBoxMute->setChecked(false);    // XXX
     //ui->dial->scroll(1,1);
     checkAvailablePlayer();
@@ -31,6 +31,21 @@ void MainWindow::reconnect(){
     ui->pushButtonPrev->disconnect();
     ui->pushButtonShow->disconnect();
     ui->checkBoxMute->disconnect();
+
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    QDBusInterface dbus_iface("org.freedesktop.DBus", "/org/freedesktop/DBus",
+                              "org.freedesktop.DBus", bus);
+    //    QVariantList list;
+    //    list.append( dbus_iface.call("ListNames").arguments().at(0));
+    QVariant list=dbus_iface.call("ListNames").arguments().at(0);
+    QStringList mprisList,temp;
+    temp=list.toStringList();
+    QRegExp rx("org.mpris.*");
+    mprisList=temp.filter(rx);
+    qDebug() << mprisList << mprisList.count()<<mprisList.value(0);
+    if(mprisList.count()==1){
+        //makeConnection(mprisList.value(0));
+    }
 
     if(ui->comboBox->currentText()=="Amarok"){
         connectAmarok();
@@ -88,8 +103,10 @@ void MainWindow::checkAvailablePlayer(){
                                                  "org.freedesktop.DBus.Introspectable",
                                                  bus);
     QDBusReply<QString> amarokReply= interface->call("Introspect");
-    if(amarokReply.isValid()){
+    //qDebug()<<amarokReply;
+    if(amarokReply.value()!=""){
         ui->comboBox->addItem("Amarok");
+        //qDebug()<<"here";
         connectAmarok();    //by default
     }
     //amarok::checkAvailable();
