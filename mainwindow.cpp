@@ -32,21 +32,6 @@ void MainWindow::reconnect(){
     ui->pushButtonShow->disconnect();
     ui->checkBoxMute->disconnect();
 
-    QDBusConnection bus = QDBusConnection::sessionBus();
-    QDBusInterface dbus_iface("org.freedesktop.DBus", "/org/freedesktop/DBus",
-                              "org.freedesktop.DBus", bus);
-    //    QVariantList list;
-    //    list.append( dbus_iface.call("ListNames").arguments().at(0));
-    QVariant list=dbus_iface.call("ListNames").arguments().at(0);
-    QStringList mprisList,temp;
-    temp=list.toStringList();
-    QRegExp rx("org.mpris.*");
-    mprisList=temp.filter(rx);
-    qDebug() << mprisList << mprisList.count()<<mprisList.value(0);
-    if(mprisList.count()==1){
-        //makeConnection(mprisList.value(0));
-    }
-
     if(ui->comboBox->currentText()=="Amarok"){
         connectAmarok();
     }else if(ui->comboBox->currentText()=="Clementine"){
@@ -96,7 +81,20 @@ void MainWindow::connectAudacious(){
             this, SLOT(showAudacious()));
 }
 void MainWindow::checkAvailablePlayer(){
-    QDBusConnection bus=QDBusConnection::sessionBus();
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    QDBusInterface dbus_iface("org.freedesktop.DBus", "/org/freedesktop/DBus",
+                              "org.freedesktop.DBus", bus);
+    //    QVariantList list;
+    //    list.append( dbus_iface.call("ListNames").arguments().at(0));
+    QVariant list=dbus_iface.call("ListNames").arguments().at(0);
+    QStringList mprisList;
+    QRegExp rx("org.mpris.*");
+    mprisList=list.toStringList().filter(rx);
+    qDebug() << mprisList << mprisList.count()<<mprisList.value(0);
+    if(mprisList.count()==1){
+        //makeConnection(mprisList.value(0));
+    }
+
 // * * * Amarok * * *
     QDBusInterface *interface=new QDBusInterface("org.mpris.amarok",
                                                  "/org/mpris/MediaPlayer2",

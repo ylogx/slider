@@ -6,8 +6,8 @@ FIND_PACKAGE(Qt4 REQUIRED)
 
 SET(QT_USE_QTDBUS TRUE)   #this little line almost ruined my day
 
-SET(demo_SOURCES main.cpp mainwindow.cpp)
-SET(demo_HEADERS mainwindow.h)
+SET(demo_SOURCES main.cpp mainwindow.cpp amarokInterface.cpp amarokAdaptor.cpp)
+SET(demo_HEADERS mainwindow.h amarokInterface.h amarokAdaptor.h)
 SET(demo_FORMS mainwindow.ui)
 
 QT4_WRAP_CPP(demo_HEADERS_MOC ${demo_HEADERS})
