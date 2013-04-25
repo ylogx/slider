@@ -92,7 +92,7 @@ void MainWindow::checkAvailablePlayer(){
     mprisList=list.toStringList().filter(rx);
     qDebug() << mprisList << mprisList.count()<<mprisList.value(0);
     if(mprisList.count()==1){
-        //makeConnection(mprisList.value(0));
+        //makeConnection(mprisList.value(0));   //TODO
     }
 
 // * * * Amarok * * *
