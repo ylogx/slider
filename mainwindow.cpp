@@ -2,6 +2,8 @@
 #include <QtDBus/QDBusMessage>
 #include <QtDBus/QDBusConnection>
 
+#include "amarokInterface.h"
+#include "amarokAdaptor.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -81,6 +83,7 @@ void MainWindow::connectAudacious(){
             this, SLOT(showAudacious()));
 }
 void MainWindow::checkAvailablePlayer(){
+    //Under Progress
     QDBusConnection bus = QDBusConnection::sessionBus();
     QDBusInterface dbus_iface("org.freedesktop.DBus", "/org/freedesktop/DBus",
                               "org.freedesktop.DBus", bus);
@@ -88,11 +91,26 @@ void MainWindow::checkAvailablePlayer(){
     //    list.append( dbus_iface.call("ListNames").arguments().at(0));
     QVariant list=dbus_iface.call("ListNames").arguments().at(0);
     QStringList mprisList;
-    QRegExp rx("org.mpris.*");
+    QRegExp rx("org.mpris.MediaPlayer2.*");
     mprisList=list.toStringList().filter(rx);
     qDebug() << mprisList << mprisList.count()<<mprisList.value(0);
-    if(mprisList.count()==1){
-        //makeConnection(mprisList.value(0));   //TODO
+    for(int i=0;i<mprisList.size();i++){
+        QDBusInterface dbusIface(mprisList.value(i),"/org/mpris/mediaPlayer2",
+                                 "org.mpris.MediaPlayer2",bus);
+        ///qDebug()<<dbusIface.service();
+        //qDebug()<<dbusIface.property("Identity");
+//        OrgMprisMediaPlayer2Interface obj(mprisList.value(i),"/org/mpris/mediaPlayer2",
+//                                          QDBusConnection::sessionBus(),this);
+//        qDebug()<<obj.property("Identity");//.toStringList();
+//        ui->comboBox->addItem(playerName);
+        MediaPlayer2Adaptor adpObj(this);
+        qDebug()<<adpObj.identity();
+        qDebug()<<adpObj.canQuit();
+        qDebug()<<adpObj.canRaise();
+        PlayerAdaptor2* p2Obj;
+        p2Obj=new PlayerAdaptor2(this);
+        p2Obj->AdjustVolume(40);
+
     }
 
 // * * * Amarok * * *
@@ -160,6 +178,7 @@ void MainWindow::checkAvailablePlayer(){
     if(jukReply.isValid()){
         ui->comboBox->addItem("Juk");
     }
+
 }//end checkAvailable
 
 //****************************
