@@ -1,4 +1,4 @@
 demoSoundMenu
 =============
 
-A demo application i made to help me understand dbus, mpris
+A demo application I made to help me understand dbus, mpris
