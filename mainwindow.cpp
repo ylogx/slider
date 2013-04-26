@@ -14,6 +14,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     ui->labelPlayer->setText("No Player Selected :( Use combo box");
     ui->checkBoxMute->setChecked(false);    // XXX
+    connect(ui->pushButtonKMix, SIGNAL(clicked()),
+            this, SLOT(showKMix()));
     //ui->dial->scroll(1,1);
     checkAvailablePlayer();
     connect(ui->comboBox, SIGNAL(activated(int)),// SIGNAL(currentIndexChanged(int)),
@@ -43,45 +45,6 @@ void MainWindow::reconnect(){
     }
 }
 
-void MainWindow::connectAmarok(){
-    ui->labelPlayer->setText("Amarok");
-    connect(ui->pushButtonPlay, SIGNAL(clicked()),
-            this, SLOT(pauseAmarok()));
-    connect(ui->pushButtonNext, SIGNAL(clicked()),
-            this, SLOT(nextAmarok()));
-    connect(ui->pushButtonPrev, SIGNAL(clicked()),
-            this, SLOT(prevAmarok()));
-    connect(ui->checkBoxMute, SIGNAL(stateChanged(int)),
-            this, SLOT(muteAmarok()));
-    connect(ui->pushButtonShow, SIGNAL(clicked()),
-            this, SLOT(showAmarok()));
-}
-void MainWindow::connectClementine(){
-    ui->labelPlayer->setText("Clementine");
-    connect(ui->pushButtonPlay, SIGNAL(clicked()),
-            this, SLOT(pauseClementine()));
-    connect(ui->pushButtonNext, SIGNAL(clicked()),
-            this, SLOT(nextClementine()));
-    connect(ui->pushButtonPrev, SIGNAL(clicked()),
-            this, SLOT(prevClementine()));
-    connect(ui->checkBoxMute, SIGNAL(stateChanged(int)),
-            this, SLOT(muteClementine()));
-    connect(ui->pushButtonShow, SIGNAL(clicked()),
-            this, SLOT(showClementine()));
-}
-void MainWindow::connectAudacious(){
-    ui->labelPlayer->setText("Audacious");
-    connect(ui->pushButtonPlay, SIGNAL(clicked()),
-            this, SLOT(pauseAudacious()));
-    connect(ui->pushButtonNext, SIGNAL(clicked()),
-            this, SLOT(nextAudacious()));
-    connect(ui->pushButtonPrev, SIGNAL(clicked()),
-            this, SLOT(prevAudacious()));
-    connect(ui->checkBoxMute, SIGNAL(toggled(bool muteState)),
-            this, SLOT(muteAudacious(muteState)));
-    connect(ui->pushButtonShow, SIGNAL(clicked()),
-            this, SLOT(showAudacious()));
-}
 void MainWindow::checkAvailablePlayer(){
     //Under Progress
     QDBusConnection bus = QDBusConnection::sessionBus();
@@ -112,7 +75,6 @@ void MainWindow::checkAvailablePlayer(){
         p2Obj->AdjustVolume(40);
 
     }
-
 // * * * Amarok * * *
     QDBusInterface *interface=new QDBusInterface("org.mpris.amarok",
                                                  "/org/mpris/MediaPlayer2",
@@ -125,6 +87,7 @@ void MainWindow::checkAvailablePlayer(){
         //qDebug()<<"here";
         connectAmarok();    //by default
     }
+    /*
     //amarok::checkAvailable();
 // * * * Audacious * * *
     interface=new QDBusInterface("org.mpris.audacious",
@@ -178,12 +141,107 @@ void MainWindow::checkAvailablePlayer(){
     if(jukReply.isValid()){
         ui->comboBox->addItem("Juk");
     }
-
+*/
 }//end checkAvailable
 
+void MainWindow::connectAmarok(){
+    QString service="org.mpris.MediaPlayer2.amarok";
+    QDBusConnection bus=QDBusConnection::sessionBus();
+    QDBusInterface bus_interface(service,"/org/mpris/MediaPlayer2","org.freedesktop.DBus.Properties",bus);
+    QDBusReply<QVariant> playerIdentity = bus_interface.call("Get","org.mpris.MediaPlayer2.Player","Identity");
+    qDebug()<<playerIdentity.value().toString();
+
+    ui->labelPlayer->setText("Amarok");
+    //***set current volume
+    QDBusReply<QVariant> amarokVol = bus_interface.call("Get","org.mpris.MediaPlayer2.Player","Volume");
+    qDebug()<<amarokVol.value().toDouble();
+    //ui->dial->setValue(100 * amarokVol.value().toDouble());
+    ui->volumeSlider->setValue(100 * amarokVol.value().toDouble());
+    setMetadata(service);
+    setPositionSlider(service);
+    connect(ui->pushButtonPlay, SIGNAL(clicked()),
+            this, SLOT(pauseAmarok()));
+    connect(ui->pushButtonNext, SIGNAL(clicked()),
+            this, SLOT(nextAmarok()));
+    connect(ui->pushButtonPrev, SIGNAL(clicked()),
+            this, SLOT(prevAmarok()));
+    connect(ui->checkBoxMute, SIGNAL(stateChanged(int)),
+            this, SLOT(muteAmarok()));
+    connect(ui->pushButtonShow, SIGNAL(clicked()),
+            this, SLOT(showAmarok()));
+    connect(ui->volumeSlider, SIGNAL(valueChanged(int)),
+            this, SLOT(volumeChanged(int)));
+    connect(ui->positionSlider, SIGNAL(valueChanged(int)),
+            this, SLOT(positionChanged(int)));
+}
+void MainWindow::connectClementine(){
+    ui->labelPlayer->setText("Clementine");
+    connect(ui->pushButtonPlay, SIGNAL(clicked()),
+            this, SLOT(pauseClementine()));
+    connect(ui->pushButtonNext, SIGNAL(clicked()),
+            this, SLOT(nextClementine()));
+    connect(ui->pushButtonPrev, SIGNAL(clicked()),
+            this, SLOT(prevClementine()));
+    connect(ui->checkBoxMute, SIGNAL(stateChanged(int)),
+            this, SLOT(muteClementine()));
+    connect(ui->pushButtonShow, SIGNAL(clicked()),
+            this, SLOT(showClementine()));
+}
+void MainWindow::connectAudacious(){
+    ui->labelPlayer->setText("Audacious");
+    connect(ui->pushButtonPlay, SIGNAL(clicked()),
+            this, SLOT(pauseAudacious()));
+    connect(ui->pushButtonNext, SIGNAL(clicked()),
+            this, SLOT(nextAudacious()));
+    connect(ui->pushButtonPrev, SIGNAL(clicked()),
+            this, SLOT(prevAudacious()));
+    connect(ui->checkBoxMute, SIGNAL(toggled(bool muteState)),
+            this, SLOT(muteAudacious(muteState)));
+    connect(ui->pushButtonShow, SIGNAL(clicked()),
+            this, SLOT(showAudacious()));
+}
 //****************************
 //***********SLOTS************
 //****************************
+void MainWindow::showKMix(){
+    //qdbus org.kde.kmix /kmix/KMixWindow com.trolltech.Qt.QWidget.show
+    QDBusMessage message= QDBusMessage::createMethodCall("org.kde.kmix",
+                                                         "/kmix/KMixWindow",
+                                                         "com.trolltech.Qt.QWidget","show");
+    QDBusConnection::sessionBus().send(message);
+}
+
+void MainWindow::volumeChanged(int sliderVal){
+    QString service="org.mpris.MediaPlayer2.amarok";
+    //set dial
+    double sliderValDouble=sliderVal;
+    //qDebug()<<sliderVal<<"sliderval";
+    QDBusVariant var;
+    var.setVariant(QVariant::fromValue(sliderValDouble/100));
+    QDBusConnection bus=QDBusConnection::sessionBus();
+    QDBusInterface bus_interface(service,"/org/mpris/MediaPlayer2","org.freedesktop.DBus.Properties",bus);
+    QDBusReply<QVariant> amarokVol = bus_interface.call("Set","org.mpris.MediaPlayer2.Player","Volume",QVariant::fromValue(var));
+
+    //qDebug()<<amarokVol.value().toDouble();
+    //ui->dial->setValue(100 * amarokVol.value().toDouble());
+    //ui->volumeSlider->setValue(100 * amarokVol.value().toDouble());
+}
+void MainWindow::positionChanged(int sliderVal){
+    //set dial
+    double sliderValDouble=sliderVal;
+//    //qDebug()<<sliderVal<<"sliderval";
+//    QDBusVariant var;
+//    var.setVariant(QVariant::fromValue(sliderValDouble/100));
+    QDBusConnection bus=QDBusConnection::sessionBus();
+    QDBusInterface bus_interface("org.mpris.MediaPlayer2.amarok","/org/mpris/MediaPlayer2","org.freedesktop.DBus.Properties",bus);
+    QDBusReply<QVariant> amarokVol = bus_interface.call("Seek",(qlonglong)sliderValDouble);
+                                                        //"org.mpris.MediaPlayer2.Player","Volume",QVariant::fromValue(var));
+
+    //qDebug()<<amarokVol.value().toDouble();
+    //ui->dial->setValue(100 * amarokVol.value().toDouble());
+    //ui->volumeSlider->setValue(100 * amarokVol.value().toDouble());
+}
+
 //---------------------Amarok-----------------------
 void MainWindow::pauseAmarok(){
     //QDBusConnection bus = QDBusConnection::sessionBus();
@@ -191,22 +249,26 @@ void MainWindow::pauseAmarok(){
     QDBusMessage message= QDBusMessage::createMethodCall("org.mpris.amarok",
                                                          "/org/mpris/MediaPlayer2",
                                                          "org.mpris.MediaPlayer2.Player","PlayPause");
-    bool queued=QDBusConnection::sessionBus().send(message);
+    QDBusConnection::sessionBus().send(message);
 }
 void MainWindow::nextAmarok(){
     char str[20]="Next";
-    QDBusMessage message= QDBusMessage::createMethodCall("org.mpris.amarok",
+    QString service="org.mpris.MediaPlayer2.amarok";
+    QDBusMessage message= QDBusMessage::createMethodCall(service,
                                                          "/org/mpris/MediaPlayer2",
                                                          "org.mpris.MediaPlayer2.Player",str);
     //qDebug()<<str<<" mess: "<<message;
-    bool queued=QDBusConnection::sessionBus().send(message);
+    QDBusConnection::sessionBus().send(message);
+    setMetadata(service);
 }
 void MainWindow::prevAmarok(){
-    QDBusMessage message= QDBusMessage::createMethodCall("org.kde.amarok",
+    QString service="org.mpris.MediaPlayer2.amarok";
+    QDBusMessage message= QDBusMessage::createMethodCall(service,
                                                          "/org/mpris/MediaPlayer2",
                                                          "org.mpris.MediaPlayer2.Player","Previous");
-    bool queued=QDBusConnection::sessionBus().send(message);
+    QDBusConnection::sessionBus().send(message);
     //qDebug()<<" mess: "<<message;
+    setMetadata(service);
 }
 void MainWindow::muteAmarok(){
     // XXX working
@@ -222,7 +284,7 @@ void MainWindow::showAmarok(){
     QDBusMessage message= QDBusMessage::createMethodCall("org.mpris.amarok",
                                                          "/org/mpris/MediaPlayer2",
                                                          "org.mpris.MediaPlayer2","Raise");
-    bool queued=QDBusConnection::sessionBus().send(message);
+    QDBusConnection::sessionBus().send(message);
 }
 
 //---------------------Clementine-----------------------
@@ -232,7 +294,7 @@ void MainWindow::pauseClementine(){
     QDBusMessage message= QDBusMessage::createMethodCall("org.mpris.clementine",
                                                          "/org/mpris/MediaPlayer2",
                                                          "org.mpris.MediaPlayer2.Player","PlayPause");
-    bool queued=QDBusConnection::sessionBus().send(message);
+    QDBusConnection::sessionBus().send(message);
 }
 void MainWindow::nextClementine(){
     char str[20]="Next";
@@ -240,27 +302,27 @@ void MainWindow::nextClementine(){
                                                          "/org/mpris/MediaPlayer2",
                                                          "org.mpris.MediaPlayer2.Player",str);
     //qDebug()<<str<<" mess: "<<message;
-    bool queued=QDBusConnection::sessionBus().send(message);
+    QDBusConnection::sessionBus().send(message);
 }
 void MainWindow::prevClementine(){
     QDBusMessage message= QDBusMessage::createMethodCall("org.mpris.clementine",
                                                          "/org/mpris/MediaPlayer2",
                                                          "org.mpris.MediaPlayer2.Player","Previous");
-    bool queued=QDBusConnection::sessionBus().send(message);
+    QDBusConnection::sessionBus().send(message);
     //qDebug()<<" mess: "<<message;
 }
 void MainWindow::muteClementine(){
     QDBusMessage getVolume= QDBusMessage::createMethodCall("org.mpris.clementine",
                                                          "/Player",
                                                          "org.freedesktop.MediaPlayer","Mute");
-    bool queued=QDBusConnection::sessionBus().send(getVolume);
+    QDBusConnection::sessionBus().send(getVolume);
 }
 void MainWindow::showClementine(){
     // xxx not supported
     QDBusMessage message= QDBusMessage::createMethodCall("org.mpris.clementine",
                                                          "/org/mpris/MediaPlayer2",
                                                          "org.mpris.MediaPlayer2","Raise");
-    bool queued=QDBusConnection::sessionBus().send(message);
+    QDBusConnection::sessionBus().send(message);
 }
 
 
@@ -271,7 +333,7 @@ void MainWindow::pauseAudacious(){
     QDBusMessage message= QDBusMessage::createMethodCall("org.mpris.MediaPlayer2.audacious",
                                                          "/org/mpris/MediaPlayer2",
                                                          "org.mpris.MediaPlayer2.Player","PlayPause");
-    bool queued=QDBusConnection::sessionBus().send(message);
+    QDBusConnection::sessionBus().send(message);
     //qDebug()<<"pause mess:"<<message;
 }
 void MainWindow::nextAudacious(){
@@ -280,13 +342,13 @@ void MainWindow::nextAudacious(){
                                                          "/Player",
                                                          "org.freedesktop.MediaPlayer",str);
     //qDebug()<<str<<" mess: "<<message;
-    bool queued=QDBusConnection::sessionBus().send(message);
+    QDBusConnection::sessionBus().send(message);
 }
 void MainWindow::prevAudacious(){
     QDBusMessage message= QDBusMessage::createMethodCall("org.mpris.audacious",
                                                          "/Player",
                                                          "org.freedesktop.MediaPlayer","Prev");
-    bool queued=QDBusConnection::sessionBus().send(message);
+    QDBusConnection::sessionBus().send(message);
     //qDebug()<<" mess: "<<message;
 }
 void MainWindow::muteAudacious(bool muteState){
@@ -301,7 +363,7 @@ void MainWindow::muteAudacious(bool muteState){
     }
     getVolume.setArguments(args);
     //QDBusMessage volumeAmarok=QDBusConnection::sessionBus().call(getVolume);
-    bool queued=QDBusConnection::sessionBus().send(getVolume);
+    QDBusConnection::sessionBus().send(getVolume);
     //qDebug()<<"volume: "<<volumeAmarok;
     //ui->checkBoxMute->set
 }
@@ -310,7 +372,7 @@ void MainWindow::showAudacious(){
     QDBusMessage message= QDBusMessage::createMethodCall("org.mpris.MediaPlayer2.audacious",
                                                          "/org/mpris/MediaPlayer2",
                                                          "org.mpris.MediaPlayer2","Raise");
-    bool queued=QDBusConnection::sessionBus().send(message);
+    QDBusConnection::sessionBus().send(message);
     qDebug()<<"raise mess: "<<message;
     //    QDBusMessage m= QDBusMessage::createMethodCall("org.mpris.amarok",
     //                                                   "/org/mpris/MediaPlayer2",
@@ -328,4 +390,43 @@ void MainWindow::showAudacious(){
     //    qDebug()<<" mess: "<<response;
     //    QList<QVariant> list=response.arguments(); //QDBusMessage::arguments();
     //    qDebug()<<"0: "<<list[0].toInt();
+}
+
+//******Other functions
+void MainWindow::setPositionSlider(QString service){
+    QDBusConnection bus=QDBusConnection::sessionBus();
+    QDBusInterface bus_interface(service,"/org/mpris/MediaPlayer2","org.freedesktop.DBus.Properties",bus);
+
+    QDBusReply<QVariant> metaVar = bus_interface.call("Get","org.mpris.MediaPlayer2.Player","Metadata");
+    QDBusArgument arg = metaVar.value().value<QDBusArgument>();
+    QVariantMap metaMap;
+    arg>>metaMap;
+    QString title = metaMap["xesam:title"].toString();
+    QString album = metaMap["xesam:album"].toString();
+    QString artist = metaMap["xesam:artist"].toString();
+    long int length = metaMap["mpris:length"].toInt();
+    //qDebug()<<title<<album<<artist<<length;
+    //***set current track position
+    QDBusReply<QVariant> amarokPos = bus_interface.call("Get","org.mpris.MediaPlayer2.Player","Position");
+    //qDebug()<<amarokPos;
+    //ui->dial->setValue(100 * amarokVol.value().toDouble());
+    ui->positionSlider->setValue(100*amarokPos.value().toDouble()/length);
+
+}
+void MainWindow::setMetadata(QString service){
+    QDBusConnection bus=QDBusConnection::sessionBus();
+    QDBusInterface bus_interface(service,"/org/mpris/MediaPlayer2","org.freedesktop.DBus.Properties",bus);
+
+    QDBusReply<QVariant> metaVar = bus_interface.call("Get","org.mpris.MediaPlayer2.Player","Metadata");
+    QDBusArgument arg = metaVar.value().value<QDBusArgument>();
+    QVariantMap metaMap;
+    arg>>metaMap;
+    QString title = metaMap["xesam:title"].toString();
+    QString artist = metaMap["xesam:artist"].toString();
+    QString album = metaMap["xesam:album"].toString();
+    //qDebug()<<title<<album<<artist;
+    //set here
+    ui->labelTitle->setText(title);
+    ui->labelArtist->setText(artist);
+    ui->labelAlbum->setText(album);
 }

@@ -21,7 +21,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     void checkAvailablePlayer();
-    
+    void setPositionSlider(QString);
+    void setMetadata(QString);
 protected:
     Ui::MainWindow *ui;
     void connectAmarok();
@@ -30,12 +31,16 @@ protected:
 
 public slots:
     void reconnect();
+    void showKMix();
 
+    void volumeChanged(int);
+    void positionChanged(int);
     void pauseAmarok();
     void nextAmarok();
     void prevAmarok();
     void muteAmarok();
     void showAmarok();
+
 
     void pauseAudacious();
     void nextAudacious();
